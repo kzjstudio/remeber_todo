@@ -81,42 +81,54 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: const Text("Things To-Do"),
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: thingsToDo.map((item) {
-              return Card(
-                  child: Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 250,
-                      child: Text(
-                        item,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 22),
+      body: thingsToDo.isEmpty
+          ? const Center(
+              child: Text(
+                "Please add somthing to remember!",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+            )
+          : SingleChildScrollView(
+              child: Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: thingsToDo.map((item) {
+                    return Card(
+                        child: Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: 250,
+                            child: Text(
+                              item,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 22),
+                            ),
+                          ),
+                          IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  thingsToDo.remove(item);
+                                });
+                              },
+                              icon: Icon(Icons.check))
+                        ],
                       ),
-                    ),
-                    IconButton(
-                        onPressed: () async {},
-                        icon: Icon(Icons.cancel_outlined))
-                  ],
+                    ));
+                  }).toList(),
                 ),
-              ));
-            }).toList(),
-          ),
-        ),
-      ),
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           openDialog();
         },
         tooltip: 'Add to-do',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
+      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
