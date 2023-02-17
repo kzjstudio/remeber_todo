@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,7 +11,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: "To-Do",
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -27,11 +29,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 late TextEditingController controller;
+var date = DateTime.now().obs;
 
 List thingsToDo = [
-  "Paint the front house and the living room sweet for the rest to come home",
-  "Build the bath room",
-  "Repaint rain gutters",
+  {
+    "date": date,
+    "todo":
+        "Paint the front house and the living room sweet for the rest to come home"
+  },
+  {"date": date, "todo": "Build the bath room"},
+  {"date": date, "todo": "Repaint rain gutters"},
 ];
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -50,30 +57,32 @@ class _MyHomePageState extends State<MyHomePage> {
   void submit(text) {
     if (text.isEmpty || text == null) return;
     setState(() {
-      thingsToDo.add(text);
+      thingsToDo.add({"date": date, "todo": text});
     });
     Navigator.of(context).pop();
     print(thingsToDo);
   }
 
-  Future openDialog() => showDialog<String>(
-      context: context,
-      builder: ((context) => AlertDialog(
-            content: TextField(
-              controller: controller,
-              autofocus: true,
-              decoration:
-                  InputDecoration(hintText: "Enter something to-do later! "),
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    submit(controller.value.text);
-                    controller.clear();
-                  },
-                  child: Text("Submit"))
-            ],
-          )));
+  String convertDateTimeDisplay(String date) {
+    final DateFormat displayFormater = DateFormat('yyyy-MM-dd HH:mm:ss.SSS');
+    final DateFormat serverFormater = DateFormat('dd-MM-yyyy');
+    final DateTime displayDate = displayFormater.parse(date);
+    final String formatted = serverFormater.format(displayDate);
+    return formatted;
+  }
+
+  void openDatePicker() async {
+    DateTime? dateSelected = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime.now(),
+        lastDate: DateTime(2050));
+
+    if (dateSelected == null) return;
+    date.value = dateSelected;
+
+    print(date);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,24 +105,31 @@ class _MyHomePageState extends State<MyHomePage> {
                     return Card(
                         child: Padding(
                       padding: const EdgeInsets.all(15.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 250,
-                            child: Text(
-                              item,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 22),
-                            ),
+                          Text(convertDateTimeDisplay(item["date"].toString())),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                width: 250,
+                                child: Text(
+                                  item["todo"],
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22),
+                                ),
+                              ),
+                              IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      thingsToDo.remove(item);
+                                    });
+                                  },
+                                  icon: Icon(Icons.check))
+                            ],
                           ),
-                          IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  thingsToDo.remove(item);
-                                });
-                              },
-                              icon: Icon(Icons.check))
                         ],
                       ),
                     ));
@@ -123,7 +139,28 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          openDialog();
+          Get.dialog(AlertDialog(
+            title: Obx(() => Text(convertDateTimeDisplay(date.string))),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              decoration:
+                  InputDecoration(hintText: "Enter something to-do later! "),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    openDatePicker();
+                  },
+                  child: Text("Pick Date")),
+              TextButton(
+                  onPressed: () {
+                    submit(controller.value.text);
+                    controller.clear();
+                  },
+                  child: Text("Submit"))
+            ],
+          ));
         },
         tooltip: 'Add to-do',
         child: const Icon(Icons.add),
